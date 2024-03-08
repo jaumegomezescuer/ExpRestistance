@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.backends.backend_pdf import PdfPages
+
+from TryPy.PlotData import GenFigure
 
 MotColumnRenames = {
     'Time(s)': 'Time',
@@ -15,18 +18,13 @@ DQAColumnRenames = {
     'Unnamed: 1': 'Time',
 }
 
-PlotCols = {
-    'Voltage': 'r',
-    'Current': 'b',
-    'Position': 'k',
-    'Force': 'g',
-    'Power': 'purple'}
-
 mpl.use("Qt5Agg")
 
 DataDir = './Data/'
 ExpDef = './Data/Experiments.ods'
 LoadsDef = './Data/LoadsDescription.ods'
+
+PDF = PdfPages('LoadReport.pdf')
 
 dfExps = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
@@ -48,6 +46,7 @@ for index, r in dfExps.iterrows():
     dfExps.loc[index, 'DaqFile'] = os.path.join(DataDir, r.DaqFile)
     dfExps.loc[index, 'MotorFile'] = os.path.join(DataDir, r.MotorFile)
 
+plt.ioff()
 for index, r in dfExps.iterrows():
     if not os.path.isfile(r.DaqFile):
         print(f'File {r.DaqFile} not found')
@@ -99,32 +98,42 @@ for index, r in dfExps.iterrows():
 
         dfData[col] = np.interp(dfData.Time, dfMOT.Time, dfMOT[col])
 
-    # plot data
+    # Calculate Voltage, Current and Power
+    dfData['VoltageAcq'] = dfData.Voltage
+    dfData['Voltage'] = dfData.VoltageAcq / r.Gain
+    dfData['Current'] = dfData.Voltage / r.Req
+    dfData['Power'] = dfData.Current * dfData.Voltage
+
+    # Calculate Contact Position
+    ContactForce = -5
+    dt = dfData.Time[dfData['Force'] < ContactForce].diff()
+    CycleInds = dt[dt > 5e-4].index
+    ContactPos = dfData.Position[CycleInds].mean()
+    MaxPos = dfData.Position.max()
+    MinPos = dfData.Position.min()
+
     XVar = 'Time'
-    fig, ax = plt.subplots(1, 1, figsize=(12, 5))
-    axp = None
-    AxsDict = {}
-    ic = 0
-    for col, color in PlotCols.items():
-        if col == XVar:
-            continue
-        if col not in dfData.columns:
-            continue
-
-        if axp is None:
-            axp = ax
-        else:
-            axp = plt.twinx(ax)
-        if ic > 1:
-            axp.spines.right.set_position(("axes", 1 + (0.1 * (ic - 1))))
-        ic += 1
-        axp.set_ylabel(col)
-        axp.yaxis.label.set_color(color)
-        axp.tick_params(axis='y', colors=color)
-        AxsDict[col] = axp
-
+    AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, figsize=(12, 5))
     for col, ax in AxsDict.items():
+        ax.set_xlabel(XVar)
         ax.plot(dfData[XVar], dfData[col], PlotCols[col])
-    ax.set_xlabel(XVar)
+    fig = ax.get_figure()
+    fig.suptitle(r.ExpId)
     fig.tight_layout()
+    PDF.savefig(fig)
 
+    XVar = 'Position'
+    AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, figsize=(10, 5))
+    for col, ax in AxsDict.items():
+        ax.set_xlabel(XVar)
+        ax.set_xlim(MinPos, ContactPos)
+        ax.plot(dfData[XVar], dfData[col], PlotCols[col])
+    fig = ax.get_figure()
+    fig.suptitle(r.ExpId)
+    fig.tight_layout()
+    PDF.savefig(fig)
+
+    plt.close('all')
+
+plt.ion()
+PDF.close()

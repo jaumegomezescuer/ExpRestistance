@@ -5,20 +5,15 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.backends.backend_pdf import PdfPages
 
+from TryPy.Calculations import ExtractCycles
+from TryPy.LoadData import Loadfiles
 from TryPy.PlotData import GenFigure
 
-MotColumnRenames = {
-    'Time(s)': 'Time',
-    'MC SW Overview - Actual Position(mm)': 'Position',
-    'MC SW Force Control - Measured Force(N)': 'Force',
-}
+import seaborn as sns
 
-DQAColumnRenames = {
-    'Input 0': 'Voltage',
-    'Unnamed: 1': 'Time',
-}
-
-mpl.use("Qt5Agg")
+mpl.use("QtAgg")
+plt.close('all')
+plt.ion()
 
 DataDir = './Data/'
 ExpDef = './Data/Experiments.ods'
@@ -47,76 +42,39 @@ for index, r in dfExps.iterrows():
     dfExps.loc[index, 'MotorFile'] = os.path.join(DataDir, r.MotorFile)
 
 plt.ioff()
+dfCycles = pd.DataFrame()
 for index, r in dfExps.iterrows():
-    if not os.path.isfile(r.DaqFile):
-        print(f'File {r.DaqFile} not found')
-    if not os.path.isfile(r.MotorFile):
-        print(f'File {r.MotorFile} not found')
 
-    daqf = pd.ExcelFile(r.DaqFile)
-    sheets = daqf.sheet_names
-    dfDAQ = pd.read_excel(r.DaqFile,
-                          sheet_name=sheets[1])
+    print(f'Processing: {r.ExpId}')
 
-    # rename columns
-    dfDAQ = dfDAQ.rename(columns=DQAColumnRenames)
-
-    dfMOT = pd.read_csv(r.MotorFile,
-                        header=0,
-                        index_col=False,
-                        delimiter=',',
-                        decimal='.')
-    # drop Non-defined columns
-    dropcols = []
-    for col in dfMOT.columns:
-        if col not in MotColumnRenames.keys():
-            dropcols.append(col)
-    dfMOT = dfMOT.drop(columns=dropcols)
-
-    # rename columns
-    dfMOT = dfMOT.rename(columns=MotColumnRenames)
-
-    # Motor sampling Rate
-    MotFs = 1 / dfMOT.Time.diff().mean()
-    print(f'Motor sampling rate: {MotFs}')
-
-    # DAQ sampling rate
-    if 'Time' in dfDAQ.columns:
-        DaqFs = 1 / dfDAQ.Time.diff().mean()
-        print(f'Found DAQ sampling rate: {DaqFs}')
-    else:
-        nSamps = dfDAQ.Voltage.size
-        DaqFs = nSamps / (1 / MotFs * dfMOT.Time.size)
-        print(f'Calculated DAQ sampling rate: {DaqFs}')
-        dfDAQ['Time'] = np.arange(0, nSamps) / DaqFs
-
-    # Create interpolated data
-    dfData = dfDAQ
-    for col in dfMOT.columns:
-        if col is 'Time':
-            continue
-
-        dfData[col] = np.interp(dfData.Time, dfMOT.Time, dfMOT[col])
-
-    # Calculate Voltage, Current and Power
-    dfData['VoltageAcq'] = dfData.Voltage
-    dfData['Voltage'] = dfData.VoltageAcq / r.Gain
-    dfData['Current'] = dfData.Voltage / r.Req
-    dfData['Power'] = dfData.Current * dfData.Voltage
+    dfData = Loadfiles(r)
+    # Reference position and force
+    dfData.Position = dfData.Position - dfData.Position.min()
+    dfData.Force = -dfData.Force
 
     # Calculate Contact Position
-    ContactForce = -5
-    dt = dfData.Time[dfData['Force'] < ContactForce].diff()
-    CycleInds = dt[dt > 5e-4].index
-    ContactPos = dfData.Position[CycleInds].mean()
-    MaxPos = dfData.Position.max()
-    MinPos = dfData.Position.min()
+    CyclesList = ExtractCycles(dfData,
+                               ContactForce=r.ContactForce,
+                               Latency=10e-3,
+                               CurrentThresh=1e-3,
+                               )
+    # stack cycles
+    for cy in CyclesList:
+        cy.update(r.to_dict())
+    dfCycle = pd.DataFrame(CyclesList)
+    dfCycles = pd.concat([dfCycles, dfCycle])
 
+    # Generate Debug Figures
     XVar = 'Time'
-    AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, figsize=(12, 5))
+    AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, axisFactor=0.1, figsize=(12, 5))
     for col, ax in AxsDict.items():
         ax.set_xlabel(XVar)
         ax.plot(dfData[XVar], dfData[col], PlotCols[col])
+
+    for cy in CyclesList:
+        ax.axvline(x=cy['tStart'], color='y', linewidth=2)
+        ax.axvline(x=cy['tEnd'], color='y', linestyle='-.', linewidth=2)
+        ax.axvline(x=cy['tStart'] + cy['tTransition'], color='y', linestyle='--', linewidth=1)
     fig = ax.get_figure()
     fig.suptitle(r.ExpId)
     fig.tight_layout()
@@ -126,14 +84,46 @@ for index, r in dfExps.iterrows():
     AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, figsize=(10, 5))
     for col, ax in AxsDict.items():
         ax.set_xlabel(XVar)
-        ax.set_xlim(MinPos, ContactPos)
         ax.plot(dfData[XVar], dfData[col], PlotCols[col])
+    ax.set_xlim(0, np.mean([cy['PosStart'] for cy in CyclesList]))
     fig = ax.get_figure()
     fig.suptitle(r.ExpId)
     fig.tight_layout()
     PDF.savefig(fig)
-
     plt.close('all')
 
 plt.ion()
 PDF.close()
+
+dfCycles = dfCycles.astype({'Gain': float,
+                            'Req': float,
+                            })
+
+sns.stripplot(data=dfCycles,
+              x='Cycle',
+              y='PosEnergy',
+              hue='ExpId')
+
+plt.figure()
+sns.scatterplot(data=dfCycles,
+                x='Req',
+                y='PosEnergy',
+                hue='Cycle')
+
+plt.figure()
+sns.scatterplot(data=dfCycles,
+                x='Req',
+                y='IMax',
+                hue='Cycle')
+
+plt.figure()
+sns.scatterplot(data=dfCycles,
+                x='Req',
+                y='VMax',
+                hue='Cycle')
+
+plt.figure()
+sns.scatterplot(data=dfCycles,
+                x='Req',
+                y='NegEnergy',
+                hue='Cycle')

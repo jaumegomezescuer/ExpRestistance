@@ -1,44 +1,75 @@
+import os
+
+import numpy as np
 import pandas as pd
 
+MotColumnRenames = {
+    'Time(s)': 'Time',
+    'MC SW Overview - Actual Position(mm)': 'Position',
+    'MC SW Force Control - Measured Force(N)': 'Force',
+}
 
-def GenerateCyclesList(df, ExtractInds=(-100, 400), Theshold=4e-6,
-                       Column='Current'):
+DQAColumnRenames = {
+    'Input 0': 'Voltage',
+    'Unnamed: 1': 'Time',
+}
 
-    dt = df.Time[df[Column] < Theshold].diff()
-    CycleInds = dt[dt > 5e-4].index
-    CycleInds = CycleInds.insert(0, dt.index[1])
-    CyclesList = []
-    for ind in CycleInds[:-1]:
-        dfCycle = df[ind + ExtractInds[0]:ind + ExtractInds[1]]
-        tinit = dfCycle.Time.iloc[0]
-        dfCycle.Time = dfCycle.Time - tinit
-        CyclesList.append(dfCycle)
+def Loadfiles(ExpDef):
+    r = ExpDef
 
-        # ax.axvline(x=df.Time[ind], color='y')
-        # axp.axvline(x=df.Time[ind], color='y')
-        # ax.axvline(x=df.Time[ind+ExtractInds[0]], color='r')
-        # axp.axvline(x=df.Time[ind+ExtractInds[0]], color='r')
-        # ax.axvline(x=df.Time[ind+ExtractInds[1]], color='r')
-        # axp.axvline(x=df.Time[ind+ExtractInds[1]], color='r')
+    if not os.path.isfile(r.DaqFile):
+        print(f'File {r.DaqFile} not found')
+    if not os.path.isfile(r.MotorFile):
+        print(f'File {r.MotorFile} not found')
 
-    return CyclesList
-
-def LoadData(DaqFile, MotorFile):
-    daqf = pd.ExcelFile(DaqFile)
+    daqf = pd.ExcelFile(r.DaqFile)
     sheets = daqf.sheet_names
-    dfDAQ = pd.read_excel(DaqFile,
-                          names=['Current', 'Time'],
+    dfDAQ = pd.read_excel(r.DaqFile,
                           sheet_name=sheets[1])
 
-    dfMOT = pd.read_csv(MotorFile,
-                        names=['Time', 'Voltage', 'Force', 'Current', 'Position'],
+    # rename columns
+    dfDAQ = dfDAQ.rename(columns=DQAColumnRenames)
+
+    dfMOT = pd.read_csv(r.MotorFile,
                         header=0,
                         index_col=False,
                         delimiter=',',
                         decimal='.')
+    # drop Non-defined columns
+    dropcols = []
+    for col in dfMOT.columns:
+        if col not in MotColumnRenames.keys():
+            dropcols.append(col)
+    dfMOT = dfMOT.drop(columns=dropcols)
+
+    # rename columns
+    dfMOT = dfMOT.rename(columns=MotColumnRenames)
+
+    # Motor sampling Rate
+    MotFs = 1 / dfMOT.Time.diff().mean()
+    print(f'Motor sampling rate: {MotFs}')
+
+    # DAQ sampling rate
+    if 'Time' in dfDAQ.columns:
+        DaqFs = 1 / dfDAQ.Time.diff().mean()
+        print(f'Found DAQ sampling rate: {DaqFs}')
+    else:
+        nSamps = dfDAQ.Voltage.size
+        DaqFs = nSamps / (1 / MotFs * dfMOT.Time.size)
+        print(f'Calculated DAQ sampling rate: {DaqFs}')
+        dfDAQ['Time'] = np.arange(0, nSamps) / DaqFs
 
     # Create interpolated data
-    for col in ('Position', 'Force'):
-        dfDAQ[col] = np.interp(dfDAQ.Time, dfMOT.Time, dfMOT[col])
+    dfData = dfDAQ
+    for col in dfMOT.columns:
+        if col is 'Time':
+            continue
+        dfData[col] = np.interp(dfData.Time, dfMOT.Time, dfMOT[col])
 
-    return dfDAQ
+    # Calculate Voltage, Current and Power
+    dfData['VoltageAcq'] = dfData.Voltage
+    dfData['Voltage'] = dfData.VoltageAcq / r.Gain
+    dfData['Current'] = dfData.Voltage / r.Req
+    dfData['Power'] = dfData.Current * dfData.Voltage
+
+    return dfData

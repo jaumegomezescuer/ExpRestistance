@@ -37,3 +37,4 @@ def GenFigure(dfData, xVar='Time', PlotColumns=None, ax=None, axisFactor=0.2, **
         AxsDict[col] = axp
 
     return AxsDict, PlotColumns
+

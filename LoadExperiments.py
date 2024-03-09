@@ -20,8 +20,9 @@ ExpDef = './Data/Experiments.ods'
 LoadsDef = './Data/LoadsDescription.ods'
 
 PDF = PdfPages('./Reports/LoadReport.pdf')
-
 OutFile = './DataSets/Cycles.pkl'
+
+FindCyclesBy = 'Position'
 
 # %% Load Experiments
 dfExps = pd.read_excel(ExpDef)
@@ -57,11 +58,20 @@ for index, r in dfExps.iterrows():
     dfData.Force = -dfData.Force
 
     # Calculate Contact Position
-    CyclesList = ExtractCycles(dfData,
-                               ContactForce=r.ContactForce,
-                               Latency=r.Latency,
-                               CurrentTh=r.CurrentTh,
-                               )
+    if FindCyclesBy == 'Position':
+        CyclesList = ExtractCycles(dfData,
+                                   ContactPosition=r.ContactPosition,
+                                   Latency=r.Latency,
+                                   CurrentTh=r.CurrentTh,
+                                   )
+    else:
+        CyclesList = ExtractCycles(dfData,
+                                   ContactPosition=None,
+                                   ContactForce=r.ContactForce,
+                                   Latency=r.Latency,
+                                   CurrentTh=r.CurrentTh,
+                                   )
+
     # stack cycles
     for cy in CyclesList:
         cy.update(r.to_dict())

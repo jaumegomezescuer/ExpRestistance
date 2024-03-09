@@ -1,4 +1,8 @@
+from math import ceil
+
+import numpy as np
 from matplotlib import pyplot as plt
+import seaborn as sns
 
 VarColors = {
     'Voltage': 'r',
@@ -53,3 +57,42 @@ def GenFigure(dfData, xVar='Time', PlotColumns=None, ax=None, axisFactor=0.2, **
 
     return AxsDict, PlotColumns
 
+xLogVars = ('Req', )
+yLogVars = ('PosEnergy', 'NegEnergy', )
+
+def PlotScalarValues(dfData, PlotPars, xVar, hueVar, PltFunt=sns.scatterplot):
+    """
+    Generate subplots for scalar values based on the provided data and plot parameters.
+
+    Parameters:
+    - dfData: the input data frame
+    - PlotPars: list of parameters to be plotted
+    - xVar: the variable for the x-axis
+    - hueVar: the variable for coloring the plot
+    - PltFunt: the plotting function to be used (default is sns.scatterplot)
+
+    Returns:
+    - fig: the generated figure
+    - axs: array of subplot axes
+    """
+
+    # create subplots
+    nRows = int(np.sqrt(len(PlotPars)))
+    nCols = ceil(len(PlotPars) / nRows)
+    fig, ax = plt.subplots(nRows, nCols, figsize=(10, 8))
+    axs = ax.flatten()
+
+    for ic, par in enumerate(PlotPars):
+        ax = axs[ic]
+        PltFunt(data=dfData,
+                x=xVar,
+                y=par,
+                hue=hueVar,
+                ax=ax
+                )
+        if xVar in xLogVars:
+            ax.set_xscale('log')
+        if par in yLogVars:
+            ax.set_yscale('log')
+    fig.tight_layout()
+    return fig, axs

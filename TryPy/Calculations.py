@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import simpson
 
 
-def ExtractCycles(dfData, ContactForce, Latency=10e-3, CurrentTh=1e-3):
+def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, CurrentTh=1e-3):
     """
     Extracts cycles from dfData based on ContactForce and Latency, and calculates various parameters for each cycle.
 
@@ -17,13 +17,25 @@ def ExtractCycles(dfData, ContactForce, Latency=10e-3, CurrentTh=1e-3):
     """
 
     # Calculate Contact Position
-    dt = dfData.Time[dfData['Force'] > ContactForce].diff()
-    StartInds = np.where(dt > Latency)[0]
-    StartInds = np.hstack((0, StartInds))
-    Indexs = dt.index.values
-    StartIndexs = Indexs[StartInds]
-    EndIndexs = Indexs[StartInds - 1][1:]
-    EndIndexs = np.hstack((EndIndexs, Indexs[-1]))
+    if ContactPosition is not None:
+        dt = dfData.Time[dfData['Position'] < ContactPosition].diff()
+        StartInds = np.where(dt > Latency)[0]
+        StartInds = np.hstack((0, StartInds))
+        Indexs = dt.index.values
+        StartIndexs = Indexs[StartInds]
+        EndIndexs = Indexs[StartInds - 1][1:]
+        EndIndexs = np.hstack((EndIndexs, Indexs[-1]))
+    elif ContactForce is not None:
+        dt = dfData.Time[dfData['Force'] > ContactForce].diff()
+        StartInds = np.where(dt > Latency)[0]
+        StartInds = np.hstack((0, StartInds))
+        Indexs = dt.index.values
+        StartIndexs = Indexs[StartInds]
+        EndIndexs = Indexs[StartInds - 1][1:]
+        EndIndexs = np.hstack((EndIndexs, Indexs[-1]))
+    else:
+        print('Please specify ContactForce or ContactPosition')
+        return None
 
     # Calculate Duration
     Duration = dfData.Time[EndIndexs].values - dfData.Time[StartIndexs].values
@@ -37,6 +49,8 @@ def ExtractCycles(dfData, ContactForce, Latency=10e-3, CurrentTh=1e-3):
     CyclesList = []
     for ic, st in enumerate(StartIndexs):
         ed = st + nSampsCycle
+        if ed > dfData.shape[0]:
+            ed = dfData.shape[0]-1
         data = dfData[st:ed].copy()
         data.reset_index(inplace=True, drop=True)
         data.loc[:, 'Time'] = data.Time.values - data.Time[0]

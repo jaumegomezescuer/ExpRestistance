@@ -19,6 +19,8 @@ DataDir = './Data/'
 ExpDef = './Data/Experiments.ods'
 LoadsDef = './Data/LoadsDescription.ods'
 
+FindCyclesBy = 'Position'
+
 # %% Load Experiment Info
 dfExps = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
@@ -55,11 +57,20 @@ for index, r in dfExps.iterrows():
     dfData.Force = -dfData.Force
 
     # Calculate Contact Position
-    CyclesList = ExtractCycles(dfData,
-                               ContactForce=r.ContactForce,
-                               Latency=r.Latency,
-                               CurrentTh=r.CurrentTh,
-                               )
+    if FindCyclesBy == 'Position':
+        CyclesList = ExtractCycles(dfData,
+                                   ContactPosition=r.ContactPosition,
+                                   Latency=r.Latency,
+                                   CurrentTh=r.CurrentTh,
+                                   )
+    else:
+        CyclesList = ExtractCycles(dfData,
+                                   ContactPosition=None,
+                                   ContactForce=r.ContactForce,
+                                   Latency=r.Latency,
+                                   CurrentTh=r.CurrentTh,
+                                   )
+
     # stack cycles
     for cy in CyclesList:
         cy.update(r.to_dict())

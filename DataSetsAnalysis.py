@@ -60,6 +60,27 @@ fig.suptitle('Negative peak Data')
 fig.tight_layout()
 PDF.savefig(fig)
 
+# %% compare positive and negative peaks
+
+dSel = dfData.query("TribuId == 'SwTENG' ")
+fig, ax = plt.subplots()
+sns.lineplot(data=dSel,
+             x='Req',
+             y='PosEnergy',
+             ax=ax,
+             label='PosEnergy')
+sns.lineplot(data=dSel,
+             x='Req',
+             y='NegEnergy',
+             ax=ax,
+             label='NegEnergy')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Load Resistance (Ohm)')
+ax.set_ylabel('Energy (J)')
+ax.legend()
+PDF.savefig(fig)
+
 # %% Plot experiment time traces
 
 VarColors = {

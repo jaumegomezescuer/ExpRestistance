@@ -2,18 +2,20 @@ import numpy as np
 from scipy.integrate import simpson
 
 
-def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, CurrentTh=1e-3):
+def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, CurrentTh=None):
     """
-    Extracts cycles from dfData based on ContactForce and Latency, and calculates various parameters for each cycle.
+    Extracts cycles from the given dataframe based on the specified ContactPosition or ContactForce.
+    Calculates various parameters for each cycle and returns a list of dictionaries containing the cycle data.
 
     Parameters:
     - dfData: DataFrame, the input data
-    - ContactForce: float, the threshold force for contact
-    - Latency: float, the time delay for identifying the start and end of cycles (default=10e-3)
-    - CurrentTh: float, the threshold current for identifying transition time (default=1e-3)
+    - ContactPosition: int, optional, the position for contact detection
+    - ContactForce: float, optional, the force for contact detection
+    - Latency: float, the latency threshold
+    - CurrentTh: float, optional, the current threshold for transition time calculation
 
     Returns:
-    - CyclesList: list, a list of dictionaries containing information about each cycle
+    - CyclesList: list of dicts, containing data for each cycle
     """
 
     # Calculate Contact Position
@@ -55,13 +57,16 @@ def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, C
         data.reset_index(inplace=True, drop=True)
         data.loc[:, 'Time'] = data.Time.values - data.Time[0]
         # Calculate sign transition time
-        hindexes = data[data.Current > CurrentTh].index
-        if len(hindexes) == 0:
-            print('No Current Threshold crossed')
+        if CurrentTh is None:
             IndHalf = int(data.shape[0] / 2)
         else:
-            IndHalf = hindexes[-1]
-        print(f'Time Transition {data.Time[IndHalf]} {IndHalf}')
+            hindexes = data[data.Current > CurrentTh].index
+            if len(hindexes) == 0:
+                print('No Current Threshold crossed')
+                IndHalf = int(data.shape[0] / 2)
+            else:
+                IndHalf = hindexes[-1]
+            print(f'Time Transition {data.Time[IndHalf]} {IndHalf}')
         imax = data.Current.idxmax()
         imin = data.Current.idxmin()
         Cycle = {'Data': data,  # Dataframe with recorded data

@@ -62,14 +62,16 @@ for index, r in dfExps.iterrows():
         CyclesList = ExtractCycles(dfData,
                                    ContactPosition=r.ContactPosition,
                                    Latency=r.Latency,
-                                   CurrentTh=r.CurrentTh,
+                                   # CurrentTh=r.CurrentTh,
+                                   CurrentTh=None,
                                    )
     else:
         CyclesList = ExtractCycles(dfData,
                                    ContactPosition=None,
                                    ContactForce=r.ContactForce,
                                    Latency=r.Latency,
-                                   CurrentTh=r.CurrentTh,
+                                   # CurrentTh=r.CurrentTh,
+                                   CurrentTh=None,
                                    )
 
     # stack cycles

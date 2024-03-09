@@ -17,6 +17,11 @@ DQAColumnRenames = {
 
 
 def LoadMotorFile(MotorFile):
+    """
+    LoadMotorFile reads a CSV file and processes it to remove non-defined columns and rename columns.
+    It takes a single parameter MotorFile, which is the path to the CSV file.
+    It returns a pandas DataFrame dfMOT.
+    """
     dfMOT = pd.read_csv(MotorFile,
                         header=0,
                         index_col=False,
@@ -34,6 +39,14 @@ def LoadMotorFile(MotorFile):
 
 
 def LoadDAQFile(DaqFile):
+    """
+    A function to load a DAQ file and return a DataFrame based on the file type.
+    Parameters:
+    - DaqFile: the file path of the DAQ file to be loaded
+    Return:
+    - dfDAQ: a DataFrame containing the DAQ data
+    - None if the file type is not recognized
+    """
     if DaqFile.endswith('.tdms'):
         tdms_file = TdmsFile.read(DaqFile)
         dfDAQ = tdms_file.as_dataframe(time_index=True,
@@ -55,6 +68,15 @@ def LoadDAQFile(DaqFile):
 
 
 def Loadfiles(ExpDef):
+    """
+    A function to load files, perform various data operations, and return the resulting dataframe.
+
+    Parameters:
+    - ExpDef: the experiment definition containing information about the files to be loaded and other parameters
+
+    Returns:
+    - dfData: the resulting dataframe after performing data operations including interpolation, voltage, current, and power calculations
+    """
     r = ExpDef
 
     if not os.path.isfile(r.DaqFile):
@@ -64,7 +86,7 @@ def Loadfiles(ExpDef):
         print(f'File {r.MotorFile} not found')
         return None
 
-        # Load DAQ file
+    # Load DAQ file
     dfDAQ = LoadDAQFile(r.DaqFile)
 
     # Load Motor file

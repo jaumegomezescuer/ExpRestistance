@@ -19,7 +19,9 @@ DataDir = './Data/'
 ExpDef = './Data/Experiments.ods'
 LoadsDef = './Data/LoadsDescription.ods'
 
-PDF = PdfPages('LoadReport.pdf')
+PDF = PdfPages('./Reports/LoadReport.pdf')
+
+OutFile = './DataSets/Cycles.pkl'
 
 dfExps = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
@@ -100,5 +102,5 @@ dfCycles = dfCycles.astype({'Gain': float,
                             'Req': float,
                             })
 
-dfCycles.to_pickle('Cycles.pkl')
+dfCycles.to_pickle(OutFile)
 

@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from nptdms import TdmsFile
 
 MotColumnRenames = {
     'Time(s)': 'Time',
@@ -14,23 +15,9 @@ DQAColumnRenames = {
     'Unnamed: 1': 'Time',
 }
 
-def Loadfiles(ExpDef):
-    r = ExpDef
 
-    if not os.path.isfile(r.DaqFile):
-        print(f'File {r.DaqFile} not found')
-    if not os.path.isfile(r.MotorFile):
-        print(f'File {r.MotorFile} not found')
-
-    daqf = pd.ExcelFile(r.DaqFile)
-    sheets = daqf.sheet_names
-    dfDAQ = pd.read_excel(r.DaqFile,
-                          sheet_name=sheets[1])
-
-    # rename columns
-    dfDAQ = dfDAQ.rename(columns=DQAColumnRenames)
-
-    dfMOT = pd.read_csv(r.MotorFile,
+def LoadMotorFile(MotorFile):
+    dfMOT = pd.read_csv(MotorFile,
                         header=0,
                         index_col=False,
                         delimiter=',',
@@ -41,9 +28,47 @@ def Loadfiles(ExpDef):
         if col not in MotColumnRenames.keys():
             dropcols.append(col)
     dfMOT = dfMOT.drop(columns=dropcols)
-
     # rename columns
     dfMOT = dfMOT.rename(columns=MotColumnRenames)
+    return dfMOT
+
+
+def LoadDAQFile(DaqFile):
+    if DaqFile.endswith('.tdms'):
+        tdms_file = TdmsFile.read(DaqFile)
+        dfDAQ = tdms_file.as_dataframe(time_index=True,
+                                       scaled_data=False)
+        dfDAQ.reset_index(inplace=True)
+        dfDAQ = dfDAQ.set_axis(['Time', 'Voltage'], axis=1)
+        return dfDAQ
+    elif DaqFile.endswith('.xlsx'):
+        daqf = pd.ExcelFile(DaqFile)
+        sheets = daqf.sheet_names
+        dfDAQ = pd.read_excel(DaqFile,
+                              sheet_name=sheets[1])
+        # rename columns
+        dfDAQ = dfDAQ.rename(columns=DQAColumnRenames)
+        return dfDAQ
+    else:
+        print(f'File {DaqFile} not recognized')
+        return None
+
+
+def Loadfiles(ExpDef):
+    r = ExpDef
+
+    if not os.path.isfile(r.DaqFile):
+        print(f'File {r.DaqFile} not found')
+        return None
+    if not os.path.isfile(r.MotorFile):
+        print(f'File {r.MotorFile} not found')
+        return None
+
+        # Load DAQ file
+    dfDAQ = LoadDAQFile(r.DaqFile)
+
+    # Load Motor file
+    dfMOT = LoadMotorFile(r.MotorFile)
 
     # Motor sampling Rate
     MotFs = 1 / dfMOT.Time.diff().mean()
@@ -62,7 +87,7 @@ def Loadfiles(ExpDef):
     # Create interpolated data
     dfData = dfDAQ
     for col in dfMOT.columns:
-        if col is 'Time':
+        if col == 'Time':
             continue
         dfData[col] = np.interp(dfData.Time, dfMOT.Time, dfMOT[col])
 

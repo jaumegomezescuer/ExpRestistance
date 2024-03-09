@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import simpson
 
 
-def ExtractCycles(dfData, ContactForce, Latency=10e-3, CurrentThresh=1e-3):
+def ExtractCycles(dfData, ContactForce, Latency=10e-3, CurrentTh=1e-3):
     # Calculate Contact Position
     dt = dfData.Time[dfData['Force'] > ContactForce].diff()
     StartInds = np.where(dt > Latency)[0]
@@ -28,7 +28,7 @@ def ExtractCycles(dfData, ContactForce, Latency=10e-3, CurrentThresh=1e-3):
         data.reset_index(inplace=True, drop=True)
         data.loc[:, 'Time'] = data.Time.values - data.Time[0]
         # Calculate sign transition time
-        IndHalf = data[data.Current > CurrentThresh].index[-1]
+        IndHalf = data[data.Current > CurrentTh].index[-1]
         print(f'Time Transition {data.Time[IndHalf]} {IndHalf}')
         imax = data.Current.idxmax()
         imin = data.Current.idxmin()

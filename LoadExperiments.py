@@ -23,6 +23,7 @@ PDF = PdfPages('LoadReport.pdf')
 
 dfExps = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
+dfLoads.Req = dfLoads.Req * 1000
 
 # %% Add Loads Fields
 LoadsFields = ('Req', 'Gain')
@@ -55,8 +56,8 @@ for index, r in dfExps.iterrows():
     # Calculate Contact Position
     CyclesList = ExtractCycles(dfData,
                                ContactForce=r.ContactForce,
-                               Latency=10e-3,
-                               CurrentThresh=1e-3,
+                               Latency=r.Latency,
+                               CurrentTh=r.CurrentTh,
                                )
     # stack cycles
     for cy in CyclesList:
@@ -99,31 +100,5 @@ dfCycles = dfCycles.astype({'Gain': float,
                             'Req': float,
                             })
 
-sns.stripplot(data=dfCycles,
-              x='Cycle',
-              y='PosEnergy',
-              hue='ExpId')
+dfCycles.to_pickle('Cycles.pkl')
 
-plt.figure()
-sns.scatterplot(data=dfCycles,
-                x='Req',
-                y='PosEnergy',
-                hue='Cycle')
-
-plt.figure()
-sns.scatterplot(data=dfCycles,
-                x='Req',
-                y='IMax',
-                hue='Cycle')
-
-plt.figure()
-sns.scatterplot(data=dfCycles,
-                x='Req',
-                y='VMax',
-                hue='Cycle')
-
-plt.figure()
-sns.scatterplot(data=dfCycles,
-                x='Req',
-                y='NegEnergy',
-                hue='Cycle')

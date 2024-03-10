@@ -86,6 +86,7 @@ def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, C
                  'NegPMax': dfData.Power[IndHalf:].max(),  # Max negative power
                  'PosEnergy': simpson(y=data.Power[:IndHalf], x=data.Time[:IndHalf]),  # Positive energy
                  'NegEnergy': simpson(y=data.Power[IndHalf:], x=data.Time[IndHalf:]),  # Negative energy
+                 'Energy': simpson(y=data.Power, x=data.Time),  # Negative energy
                  }
         CyclesList.append(Cycle)
 

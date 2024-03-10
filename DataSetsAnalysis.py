@@ -74,6 +74,11 @@ sns.lineplot(data=dSel,
              y='NegEnergy',
              ax=ax,
              label='NegEnergy')
+sns.lineplot(data=dSel,
+             x='Req',
+             y='Energy',
+             ax=ax,
+             label='Energy')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_xlabel('Load Resistance (Ohm)')

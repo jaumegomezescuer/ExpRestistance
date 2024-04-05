@@ -45,9 +45,12 @@ ax.plot(dfDAQ.Time, dfDAQ.Voltage2f, label='Voltage2f')
 axe = plt.twinx(ax)
 axe.plot(dfDAQ.Time, dfDAQ.ElectV, label='V1-V2', color='k', alpha=0.5)
 
-ax.set_xlabel('Time (s)')
-ax.set_ylabel('Voltage (V)')
-axe.set_ylabel('ElectV (V)')
+
+ax.set_xlabel('Time [s]')
+ax.set_ylabel('Voltage [V]')
+axe.set_ylabel('Current [A]')
+ax.set_title('EGNITE 1203 50Hz notch filter')
+
 ax.legend()
 axe.legend()
 plt.show()

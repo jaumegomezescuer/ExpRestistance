@@ -25,9 +25,11 @@ OutFile = './DataSets/Cycles.pkl'
 FindCyclesBy = 'Position'
 
 # %% Load Experiments
-dfExps = pd.read_excel(ExpDef)
+dfExp = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
 dfLoads.Req = dfLoads.Req * 1000
+dfExps = dfExp.query("TribuId == 'SwTENG-RF1' ")
+
 
 # %% Add Loads Fields
 LoadsFields = ('Req', 'Gain')

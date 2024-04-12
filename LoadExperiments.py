@@ -28,7 +28,8 @@ FindCyclesBy = 'Position'
 dfExp = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
 dfLoads.Req = dfLoads.Req * 1000
-dfExps = dfExp.query("TribuId == 'SwTENG-RF1' ")
+#  Only loads the specified data name in quotes.
+dfExps = dfExp.query("TribuId == 'SwTENG-RF2' ")
 
 
 # %% Add Loads Fields

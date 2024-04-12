@@ -11,7 +11,6 @@ VarColors = {
     'Force': 'g',
     'Power': 'purple'}
 
-
 def GenFigure(dfData, xVar='Time', PlotColumns=None, ax=None, axisFactor=0.2, **kwargs):
     """
     Generate a figure from the given data and plot the specified columns.

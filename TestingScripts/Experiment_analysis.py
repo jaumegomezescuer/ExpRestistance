@@ -37,7 +37,7 @@ pdSeries = []
 for MeasName, df in MeasuresDict.items():
     CyclesList = GenerateCyclesList(df,
                                     ExtractInds=(0, 400),
-                                    Theshold=-60,
+                                    Theshold=-67,
                                     Column='Position')
 
     # calc values

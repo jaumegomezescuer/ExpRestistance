@@ -36,7 +36,7 @@ PlotPars = ('IMax',
             'VMax',
             'PosPMax',
             'PosEnergy')
-fig, axs = PlotScalarValues(dfData=dfData.query("TribuId == 'SwTENG-RF1'"),
+fig, axs = PlotScalarValues(dfData=dfData.query("TribuId == 'SwTENG-RF2'"),
                             PlotPars=PlotPars,
                             xVar='Req',
                             hueVar='Cycle',
@@ -51,7 +51,7 @@ PlotPars = ('IMin',
             'NegPMax',
             'NegEnergy')
 
-fig, axs = PlotScalarValues(dfData=dfData.query("TribuId == 'SwTENG-RF1'"),
+fig, axs = PlotScalarValues(dfData=dfData.query("TribuId == 'SwTENG-RF2'"),
                             PlotPars=PlotPars,
                             xVar='Req',
                             hueVar='Cycle',
@@ -62,7 +62,7 @@ PDF.savefig(fig)
 
 # %% compare positive and negative peaks
 
-dSel = dfData.query("TribuId == 'SwTENG-RF1' ")
+dSel = dfData.query("TribuId == 'SwTENG-RF2' ")
 fig, ax = plt.subplots()
 sns.lineplot(data=dSel,
              x='Req',
@@ -86,6 +86,7 @@ ax.set_ylabel('Energy (J)')
 ax.legend()
 PDF.savefig(fig)
 
+
 # %% Plot experiment time traces
 
 VarColors = {
@@ -96,7 +97,7 @@ VarColors = {
     'Power': 'purple'}
 
 dSel = dfData
-dSel = dfData.query("TribuId == 'SwTENG-RF1' ")
+dSel = dfData.query("TribuId == 'SwTENG-RF2' ")
 
 for ex, dExp in dSel.groupby('ExpId'):
     fig, (axtime, axpos) = plt.subplots(2, 1, figsize=(11, 7))

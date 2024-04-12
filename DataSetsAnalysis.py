@@ -22,7 +22,7 @@ PlotPars = ('IMax',
             'PosPMax',
             'PosEnergy',)
 
-fig, axs = PlotScalarValues(dfData=dfData,
+fig, axs = PlotScalarValues(dfData=dfData.query("Cycle > 0"),
                             PlotPars=PlotPars,
                             xVar='Req',
                             hueVar='TribuId',
@@ -85,6 +85,8 @@ ax.set_xlabel('Load Resistance (Ohm)')
 ax.set_ylabel('Energy (J)')
 ax.legend()
 PDF.savefig(fig)
+
+
 
 # %% Plot experiment time traces
 

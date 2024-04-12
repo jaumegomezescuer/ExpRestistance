@@ -27,19 +27,27 @@ FindCyclesBy = 'Position'
 # %% Load Experiments
 dfExp = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
-dfLoads.Req = dfLoads.Req * 1000
-dfExps = dfExp.query("TribuId == 'SwTENG-RF1' ")
+dfLoads.Req = dfLoads.Req * 1000  # to convert into Ohms
+# dfExps = dfExp.query("TribuId == 'SwTENG-RF1' ")
+# dfExps = dfExp.query("ExpId == '0803-")
+# dfExps = dfExp.query("ExpId == '0403-RL034'")
 
+dfExps = dfExp
 
 # %% Add Loads Fields
 LoadsFields = ('Req', 'Gain')
 for lf in LoadsFields:
-    dfExps.insert(1, lf, None)
+    if lf not in dfExps.columns:
+        dfExps.insert(1, lf, None)
 
 for index, r in dfExps.iterrows():
     if r.RloadId in dfLoads.RloadId.values:
         for lf in LoadsFields:
             dfExps.loc[index, lf] = dfLoads.loc[dfLoads.RloadId == r.RloadId, lf].values
+    else:
+        print(f'Warning Load {r.RloadId} not found !!!!')
+        dfExps.drop(index, inplace=True)
+        print("Deleted")
 
 # %% load data files
 
@@ -48,10 +56,11 @@ for index, r in dfExps.iterrows():
     dfExps.loc[index, 'DaqFile'] = os.path.join(DataDir, r.DaqFile)
     dfExps.loc[index, 'MotorFile'] = os.path.join(DataDir, r.MotorFile)
 
+# %% Extract Cycles
+
 plt.ioff()
 dfCycles = pd.DataFrame()
 for index, r in dfExps.iterrows():
-
     print(f'Processing: {r.ExpId}')
 
     dfData = Loadfiles(r)

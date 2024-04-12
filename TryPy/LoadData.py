@@ -69,13 +69,13 @@ def LoadDAQFile(DaqFile):
 
 def Loadfiles(ExpDef):
     """
-    A function to load files, perform various data operations, and return the resulting dataframe.
+    Loads data files, calculates sampling rates, interpolates data, and calculates voltage, current, and power.
 
     Parameters:
-    - ExpDef: the experiment definition containing information about the files to be loaded and other parameters
+    - ExpDef: Experiment definition containing file paths, gain, and resistance values.
 
     Returns:
-    - dfData: the resulting dataframe after performing data operations including interpolation, voltage, current, and power calculations
+    - dfData: DataFrame containing loaded and processed data.
     """
     r = ExpDef
 

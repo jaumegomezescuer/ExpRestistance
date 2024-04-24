@@ -14,7 +14,7 @@ PDF = PdfPages('./Reports/DataSetsAnalysis.pdf')
 
 FileIn = './DataSets/Cycles.pkl' #le dices que habra un archivo llamado cycles con info de ciclos y honogeneizado
 dfData1 = pd.read_pickle(FileIn)
-dfData = dfData1.query("Cycle > 1' ")
+dfData = dfData1.query("Cycle > 1 ")
 #dfData = dfData.query("Cycle < 9' ")
 
 # %% Plot experiments comparison

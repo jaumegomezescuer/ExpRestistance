@@ -12,8 +12,10 @@ PDF = PdfPages('./Reports/DataSetsAnalysis.pdf')
 
 # %% Load data
 
-FileIn = './DataSets/Cycles.pkl'
-dfData = pd.read_pickle(FileIn)
+FileIn = './DataSets/Cycles.pkl' #le dices que habra un archivo llamado cycles con info de ciclos y honogeneizado
+dfData1 = pd.read_pickle(FileIn)
+dfData = dfData1.query("Cycle > 1' ")
+#dfData = dfData.query("Cycle < 9' ")
 
 # %% Plot experiments comparison
 
@@ -36,7 +38,7 @@ PlotPars = ('IMax',
             'VMax',
             'PosPMax',
             'PosEnergy')
-fig, axs = PlotScalarValues(dfData=dfData.query("TribuId == 'SwTENG-RF2'"),
+fig, axs = PlotScalarValues(dfData=dfData,
                             PlotPars=PlotPars,
                             xVar='Req',
                             hueVar='Cycle',
@@ -51,7 +53,7 @@ PlotPars = ('IMin',
             'NegPMax',
             'NegEnergy')
 
-fig, axs = PlotScalarValues(dfData=dfData.query("TribuId == 'SwTENG-RF2'"),
+fig, axs = PlotScalarValues(dfData=dfData,
                             PlotPars=PlotPars,
                             xVar='Req',
                             hueVar='Cycle',
@@ -62,7 +64,7 @@ PDF.savefig(fig)
 
 # %% compare positive and negative peaks
 
-dSel = dfData.query("TribuId == 'SwTENG-RF2' ")
+dSel = dfData
 fig, ax = plt.subplots()
 sns.lineplot(data=dSel,
              x='Req',
@@ -97,13 +99,13 @@ VarColors = {
     'Power': 'purple'}
 
 dSel = dfData
-dSel = dfData.query("TribuId == 'SwTENG-RF2' ")
+dSel = dfData
 
 for ex, dExp in dSel.groupby('ExpId'):
     fig, (axtime, axpos) = plt.subplots(2, 1, figsize=(11, 7))
     for gn, df in dExp.groupby('RloadId'):
         # plot time traces
-        AxsDict, _ = GenFigure(dfData=df.loc[0, 'Data'],
+        AxsDict, _ = GenFigure(dfData=df.loc[2, 'Data'],
                                xVar='Time',
                                PlotColumns=VarColors,
                                axisFactor=0.15,
@@ -117,7 +119,7 @@ for ex, dExp in dSel.groupby('ExpId'):
                 ax.set_xlabel('Time')
 
         # plot position traces
-        AxsDict, _ = GenFigure(dfData=df.loc[0, 'Data'],
+        AxsDict, _ = GenFigure(dfData=df.loc[2, 'Data'],
                                xVar='Position',
                                PlotColumns=VarColors,
                                axisFactor=0.15,

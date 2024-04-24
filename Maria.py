@@ -34,11 +34,10 @@ dfExp = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
 dfLoads.Req = dfLoads.Req * 1000 #pasamos a ohmios
 #  Only loads the specified data name in quotes inside the excel labels.
-dfExps = dfExp.query("TribuId == 'SwTENG-Tt1t2' ")
-
+dfExps = dfExp.query("TribuId == 'SwTENG-RF2' ")
 #dfExps = dfExp carga todo entero sin filtrar
 
-# %% Add Loads Fields. Mezcla dos excels en uno con datos de lo dos escogidos
+# %% Add Loads Fields. Mezcla dos excels en uno con datos de lo dos escogidos y te pone el gain y el req junto
 LoadsFields = ('Req', 'Gain')
 for lf in LoadsFields:
     dfExps.insert(1, lf, None)
@@ -47,18 +46,19 @@ for index, r in dfExps.iterrows():
     if r.RloadId in dfLoads.RloadId.values:
         for lf in LoadsFields:
             dfExps.loc[index, lf] = dfLoads.loc[dfLoads.RloadId == r.RloadId, lf].values
-    else:
-        print()
+    else
+        print
 
 # %% load data files
 
-# create abs path
+# create abs(absoluto) path. Añadir Data folder a la direccion de los archivos DAQ motor, Data/0809Daq por ejemplo
 for index, r in dfExps.iterrows():
     dfExps.loc[index, 'DaqFile'] = os.path.join(DataDir, r.DaqFile)
     dfExps.loc[index, 'MotorFile'] = os.path.join(DataDir, r.MotorFile)
 
-plt.ioff()
-dfCycles = pd.DataFrame()
+#exract cycles
+plt.ioff() #cerramos las graficas para que no salgan en ventana
+dfCycles = pd.DataFrame()  #generamos una tabla donde aparecera la informacion de los ciclos, es una tabla vacia ahora
 for index, r in dfExps.iterrows():
 
     print(f'Processing: {r.ExpId}')

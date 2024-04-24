@@ -34,11 +34,10 @@ dfExp = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
 dfLoads.Req = dfLoads.Req * 1000 #pasamos a ohmios
 #  Only loads the specified data name in quotes inside the excel labels.
-dfExps = dfExp.query("TribuId == 'SwTENG-Tt1t2' ")
-
+dfExps = dfExp.query("TribuId == 'SwTENG-RF2' ")
 #dfExps = dfExp carga todo entero sin filtrar
 
-# %% Add Loads Fields. Mezcla dos excels en uno con datos de lo dos escogidos
+# %% Add Loads Fields. Mezcla dos excels en uno con datos de lo dos escogidos y te pone el gain y el req junto
 LoadsFields = ('Req', 'Gain')
 for lf in LoadsFields:
     dfExps.insert(1, lf, None)
@@ -47,29 +46,31 @@ for index, r in dfExps.iterrows():
     if r.RloadId in dfLoads.RloadId.values:
         for lf in LoadsFields:
             dfExps.loc[index, lf] = dfLoads.loc[dfLoads.RloadId == r.RloadId, lf].values
-    else:
-        print()
+    else
+        print
 
 # %% load data files
 
-# create abs path
+# create abs(absoluto) path. Añadir Data folder a la direccion de los archivos DAQ motor, Data/0809Daq por ejemplo
 for index, r in dfExps.iterrows():
     dfExps.loc[index, 'DaqFile'] = os.path.join(DataDir, r.DaqFile)
     dfExps.loc[index, 'MotorFile'] = os.path.join(DataDir, r.MotorFile)
 
-plt.ioff()
-dfCycles = pd.DataFrame()
+#exract cycles
+plt.ioff() #cerramos las graficas para que no salgan en ventana
+dfCycles = pd.DataFrame()  #generamos una tabla donde aparecera la informacion de los ciclos, es una tabla vacia ahora
 for index, r in dfExps.iterrows():
 
-    print(f'Processing: {r.ExpId}')
+    print(f'Processing: {r.ExpId}') #imprime lo que ha procesado.
 
-    dfData = Loadfiles(r)
+    dfData = Loadfiles(r) #llama a loadfiles que va cargando las filas
     # Reference position and force
     dfData.Position = dfData.Position - dfData.Position.min()
     dfData.Force = -dfData.Force
 
-    # Calculate Contact Position
+    # Calculate Contact Position. define y Separa los ciclos
     if FindCyclesBy == 'Position':
+        #cycleslist es la lista de diccionarios, que es un tipo de variable que te permite igualar tipos de datos distintos.
         CyclesList = ExtractCycles(dfData,
                                    ContactPosition=r.ContactPosition,
                                    Latency=r.Latency,
@@ -93,6 +94,7 @@ for index, r in dfExps.iterrows():
 
     # Generate Debug Figures
     XVar = 'Time'
+    #llama a una funcion que ha generado que genera las figuras, en plan los ejes y el formato de las figuras.
     AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, axisFactor=0.1, figsize=(12, 5))
     for col, ax in AxsDict.items():
         ax.set_xlabel(XVar)
@@ -105,7 +107,7 @@ for index, r in dfExps.iterrows():
     fig = ax.get_figure()
     fig.suptitle(r.ExpId)
     fig.tight_layout()
-    PDF.savefig(fig)
+    PDF.savefig(fig) #guarda la grafica en un pdf
 
     XVar = 'Position'
     AxsDict, PlotCols = GenFigure(dfData, xVar=XVar, figsize=(10, 5))
@@ -126,5 +128,5 @@ dfCycles = dfCycles.astype({'Gain': float,
                             'Req': float,
                             })
 
-dfCycles.to_pickle(OutFile)
+dfCycles.to_pickle(OutFile) #lo guarda todo en cycles pkl
 

@@ -89,6 +89,28 @@ ax.set_ylabel('Energy (J)')
 ax.legend()
 PDF.savefig(fig)
 
+
+
+
+# Obtener los nombres de los diferentes valores de ExpId
+# Configurar el gráfico
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# Trazar los puntos para PosEnergy, NegEnergy y Energy en función de ExpId
+sns.scatterplot(data=dfData, x='ExpId', y='PosEnergy', ax=ax, label='PosEnergy', color='blue')
+sns.scatterplot(data=dfData, x='ExpId', y='NegEnergy', ax=ax, label='NegEnergy', color='red')
+sns.scatterplot(data=dfData, x='ExpId', y='Energy', ax=ax, label='Energy', color='green')
+
+ax.set_xlabel('ExpId')
+ax.set_ylabel('Energy (J)')
+ax.legend()
+
+plt.xticks(rotation=45)  # Rotar las etiquetas del eje x para una mejor legibilidad
+plt.tight_layout()
+PDF.savefig(fig)
+
+
+
 # Crear el directorio "images" si no existe
 if not os.path.exists('images'):
     os.makedirs('images')

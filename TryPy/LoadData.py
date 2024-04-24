@@ -113,9 +113,13 @@ def Loadfiles(ExpDef):
             continue
         dfData[col] = np.interp(dfData.Time, dfMOT.Time, dfMOT[col])
 
-    # Calculate Voltage, Current and Power
+    window_size = 9  # Tamaño de la ventana del filtro
+    #  dfData['SmoothVoltages'] = dfData['Voltage'].rolling(window=window_size).median()
+    dfData['SmoothVoltage'] = dfData['Voltage'].rolling(window=window_size).mean()
+
+# Calculate Voltage, Current and Power
     dfData['VoltageAcq'] = dfData.Voltage
-    dfData['Voltage'] = dfData.VoltageAcq / r.Gain
+    dfData['Voltage'] = dfData['SmoothVoltage'] / r.Gain
     dfData['Current'] = dfData.Voltage / r.Req
     dfData['Power'] = dfData.Current * dfData.Voltage
 

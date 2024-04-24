@@ -1,6 +1,7 @@
 # Import library
 import numpy as np
 from scipy.integrate import simpson
+import pandas as pd
 
 
 def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, CurrentTh=None):
@@ -61,12 +62,31 @@ def ExtractCycles(dfData, ContactPosition=8, ContactForce=None, Latency=10e-3, C
         if CurrentTh is None:
             IndHalf = int(data.shape[0] / 2)
         else:
-            hindexes = data[data.Current > CurrentTh].index
-            if len(hindexes) == 0:
+            negative_values = data[data.Current < 0].copy()
+            positive_values = data[(data.Current > 0) & (data.Current > CurrentTh)].copy()
+            negative_values['order'] = negative_values.index
+            positive_values['order'] = positive_values.index
+
+            combined_values = pd.concat([negative_values, positive_values])
+            combined_values = combined_values.sort_values(by='order')
+
+            combined_values = combined_values.drop(columns=['order'])
+            combined_values = combined_values.dropna(axis=0, subset=['Current'])
+            original_index = combined_values.index
+
+            combined_values_reset = combined_values.reset_index(drop=True)
+
+            idx_reset = combined_values_reset.index[
+                (combined_values_reset.Current >= 0) & (combined_values_reset.Current.shift(-1) < 0)].min()
+
+            combined_values_reset.index = original_index
+            # Obtener el índice correcto
+            hindexes = combined_values_reset.iloc[idx_reset].name
+            if hindexes == 0:
                 print('No Current Threshold crossed')
                 IndHalf = int(data.shape[0] / 2)
             else:
-                IndHalf = hindexes[-1]
+                IndHalf = hindexes
             print(f'Time Transition {data.Time[IndHalf]} {IndHalf}')
         imax = data.Current.idxmax()
         imin = data.Current.idxmin()

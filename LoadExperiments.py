@@ -34,7 +34,8 @@ dfExp = pd.read_excel(ExpDef)
 dfLoads = pd.read_excel(LoadsDef)
 dfLoads.Req = dfLoads.Req * 1000 #pasamos a ohmios
 #  Only loads the specified data name in quotes inside the excel labels.
-dfExps = dfExp.query("TribuId == 'SwTENG-Tt1t2' ")
+# dfExps = dfExp.query("TribuId == 'SwTENG-Tt1t2' ")
+dfExps = dfExp.query("TribuId == 'SwTENG-R' " )
 
 #dfExps = dfExp carga todo entero sin filtrar
 
@@ -48,7 +49,10 @@ for index, r in dfExps.iterrows():
         for lf in LoadsFields:
             dfExps.loc[index, lf] = dfLoads.loc[dfLoads.RloadId == r.RloadId, lf].values
     else:
-        print()
+        print(f'Warning Load {r.RloadId} not found !!!!')
+        dfExps.drop(index, inplace=True)
+        print("Deleted")
+
 
 # %% load data files
 
@@ -73,16 +77,16 @@ for index, r in dfExps.iterrows():
         CyclesList = ExtractCycles(dfData,
                                    ContactPosition=r.ContactPosition,
                                    Latency=r.Latency,
-                                   # CurrentTh=r.CurrentTh,
-                                   CurrentTh=None,
+                                   CurrentTh=r.CurrentTh,
+                                   #CurrentTh=None,
                                    )
     else:
         CyclesList = ExtractCycles(dfData,
                                    ContactPosition=None,
                                    ContactForce=r.ContactForce,
                                    Latency=r.Latency,
-                                   # CurrentTh=r.CurrentTh,
-                                   CurrentTh=None,
+                                   CurrentTh=r.CurrentTh,
+                                   #CurrentTh=None,
                                    )
 
     # stack cycles

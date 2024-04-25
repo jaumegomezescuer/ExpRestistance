@@ -124,6 +124,7 @@ VarColors = {
     'Power': 'purple'}
 image_files = []
 
+
 dSel = dfData
 #dSel = dfData.query("TribuId == 'SwTENG-RF2' ")
 
@@ -166,6 +167,8 @@ for ex, dExp in dSel.groupby('ExpId'):
         image_file = f'./images/Experiment_{ex}_Rload_{gn}.png'
         fig.savefig(image_file)
         image_files.append(image_file)
+
+
 # Crear animación con las imágenes
 animation_file = 'animation.gif'
 with imageio.get_writer(animation_file, mode='I', fps=2) as writer:

@@ -113,6 +113,7 @@ def Loadfiles(ExpDef):
             continue
         dfData[col] = np.interp(dfData.Time, dfMOT.Time, dfMOT[col])
 
+    #FILTRO SEÑAL
     window_size = 9  # Tamaño de la ventana del filtro
     #  dfData['SmoothVoltages'] = dfData['Voltage'].rolling(window=window_size).median()
     dfData['SmoothVoltage'] = dfData['Voltage'].rolling(window=window_size).mean()

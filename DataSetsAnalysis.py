@@ -91,11 +91,11 @@ PDF.savefig(fig)
 
 
 
-
+# Gráfica para Energia en función de T1 Y T2
 # Obtener los nombres de los diferentes valores de ExpId
 # Configurar el gráfico
 fig, ax = plt.subplots(figsize=(10, 6))
-
+fig.suptitle('Contact Time Effect')
 # Trazar los puntos para PosEnergy, NegEnergy y Energy en función de ExpId
 sns.scatterplot(data=dfData, x='ExpId', y='PosEnergy', ax=ax, label='PosEnergy', color='blue')
 sns.scatterplot(data=dfData, x='ExpId', y='NegEnergy', ax=ax, label='NegEnergy', color='red')

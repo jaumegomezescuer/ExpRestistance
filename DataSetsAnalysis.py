@@ -171,7 +171,7 @@ for ex, dExp in dSel.groupby('ExpId'):
 
 # Crear animación con las imágenes
 animation_file = 'animation.gif'
-with imageio.get_writer(animation_file, mode='I', fps=2) as writer:
+with imageio.get_writer(animation_file, mode='I', fps=1) as writer:
     for image_file in image_files:
         image = imageio.imread(image_file)
         writer.append_data(image)

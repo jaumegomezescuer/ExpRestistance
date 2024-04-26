@@ -35,8 +35,9 @@ dfLoads = pd.read_excel(LoadsDef)
 dfLoads.Req = dfLoads.Req * 1000 #pasamos a ohmios
 #  Only loads the specified data name in quotes inside the excel labels.
 # dfExps = dfExp.query("TribuId == 'SwTENG-Tt1t2' ")
-dfExps = dfExp.query("TribuId == 'SwTENG-St1t2' " )
-
+#dfExps = dfExp.query("TribuId == 'SwTENG-St1t2' " )
+#dfExps = dfExp.query("TribuId == 'SwTENG-SB3' ")
+dfExps = dfExp.query("TribuId == 'SwTENG-1ST' ")
 #dfExps = dfExp carga todo entero sin filtrar
 
 # %% Add Loads Fields. Mezcla dos excels en uno con datos de lo dos escogidos
